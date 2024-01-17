@@ -6,7 +6,6 @@
   const mines: boolean[] = Array(WIDTH * HEIGHT).fill(false);
   let endGame = false;
 
-  console.log();
   let generatedMines = 0;
   while (generatedMines < MINES) {
     const row = Math.floor(Math.random() * HEIGHT);
@@ -17,13 +16,6 @@
       generatedMines++;
     }
   }
-  console.log(
-    mines
-      .map((isMine, i) => [isMine, [Math.floor(i / WIDTH), i % WIDTH]] as const)
-      .filter(([isMine]) => isMine)
-      .map(([_, coords]) => `(${coords[0]},${coords[1]})`)
-      .join(", ")
-  );
 
   let boardReveals: boolean[][] = Array(HEIGHT)
     .fill(undefined)
