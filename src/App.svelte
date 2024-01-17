@@ -29,16 +29,7 @@
     .fill(undefined)
     .map(() => Array(WIDTH).fill(false));
 
-  const getCellNumber = (row: number, col: number) => {
-    let hits = 0;
-    for (let r = Math.max(0, row - 1); r <= Math.min(HEIGHT, row + 1); r++) {
-      for (let c = Math.max(0, col - 1); c <= Math.min(WIDTH, col + 1); c++) {
-        hits += mines[r * WIDTH + c] ? 1 : 0;
-      }
-    }
-    return hits;
-  };
-
+  const cellNumbers: number[] = Array(HEIGHT * WIDTH).fill(-1);
   const revealCell = (row: number, col: number) => {
     if (row < 0 || col < 0 || row >= HEIGHT || col >= WIDTH) return;
     if (boardReveals[row][col]) return;
@@ -51,7 +42,14 @@
 
     if (mines[row * WIDTH + col]) endGame = true;
 
-    if (getCellNumber(row, col) === 0) {
+    let hits = 0;
+    for (let r = Math.max(0, row - 1); r <= Math.min(HEIGHT, row + 1); r++) {
+      for (let c = Math.max(0, col - 1); c <= Math.min(WIDTH, col + 1); c++) {
+        hits += mines[r * WIDTH + c] ? 1 : 0;
+      }
+    }
+    cellNumbers[row * WIDTH + col] = hits;
+    if (hits === 0) {
       revealCell(row - 1, col - 1);
       revealCell(row, col - 1);
       revealCell(row + 1, col - 1);
@@ -75,7 +73,9 @@
           {#if mines[row * WIDTH + col]}
             <div class="square revealed">*</div>
           {:else}
-            <div class="square revealed">{getCellNumber(row, col) || ""}</div>
+            <div class="square revealed">
+              {cellNumbers[row * WIDTH + col] || ""}
+            </div>
           {/if}
         {:else}
           <!-- svelte-ignore a11y-no-static-element-interactions -->
