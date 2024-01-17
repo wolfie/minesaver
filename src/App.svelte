@@ -3,33 +3,41 @@
   const HEIGHT = 25;
   const MINES = WIDTH * HEIGHT * 0.1;
 
-  let mines: [row: number, col: number][] = [];
+  const mines: boolean[] = Array(WIDTH * HEIGHT).fill(false);
   let endGame = false;
 
   console.log();
-  while (mines.length < MINES) {
+  let generatedMines = 0;
+  while (generatedMines < MINES) {
     const row = Math.floor(Math.random() * HEIGHT);
     const col = Math.floor(Math.random() * WIDTH);
-    if (!mines.some(([_row, _col]) => row === _row && col === _col)) {
-      mines.push([row, col]);
-      console.log(`Mine placed on [${row}, ${col}]`);
-    } else {
-      console.log(`Mine already on [${row}, ${col}], rerolling...`);
+    const i = row * WIDTH + col;
+    if (!mines[i]) {
+      mines[i] = true;
+      generatedMines++;
     }
   }
+  console.log(
+    mines
+      .map((isMine, i) => [isMine, [Math.floor(i / WIDTH), i % WIDTH]] as const)
+      .filter(([isMine]) => isMine)
+      .map(([_, coords]) => `(${coords[0]},${coords[1]})`)
+      .join(", ")
+  );
 
   let boardReveals: boolean[][] = Array(HEIGHT)
     .fill(undefined)
     .map(() => Array(WIDTH).fill(false));
 
-  const getCellNumber = (row: number, col: number) =>
-    mines.filter(
-      ([_row, _col]) =>
-        _row >= row - 1 && _row <= row + 1 && _col >= col - 1 && _col <= col + 1
-    ).length;
-
-  const hasMine = (row: number, col: number) =>
-    mines.some(([_row, _col]) => _row === row && _col === col);
+  const getCellNumber = (row: number, col: number) => {
+    let hits = 0;
+    for (let r = Math.max(0, row - 1); r <= Math.min(HEIGHT, row + 1); r++) {
+      for (let c = Math.max(0, col - 1); c <= Math.min(WIDTH, col + 1); c++) {
+        hits += mines[r * WIDTH + c] ? 1 : 0;
+      }
+    }
+    return hits;
+  };
 
   const revealCell = (row: number, col: number) => {
     if (row < 0 || col < 0 || row >= HEIGHT || col >= WIDTH) return;
@@ -41,7 +49,7 @@
       )
     );
 
-    if (hasMine(row, col)) endGame = true;
+    if (mines[row * WIDTH + col]) endGame = true;
 
     if (getCellNumber(row, col) === 0) {
       revealCell(row - 1, col - 1);
@@ -64,7 +72,7 @@
     <div class="row">
       {#each boardRow as cellIsRevealed, col (col)}
         {#if cellIsRevealed || endGame}
-          {#if hasMine(row, col)}
+          {#if mines[row * WIDTH + col]}
             <div class="square revealed">*</div>
           {:else}
             <div class="square revealed">{getCellNumber(row, col) || ""}</div>
