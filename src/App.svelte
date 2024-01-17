@@ -1,7 +1,7 @@
 <script lang="ts">
-  const MINES = 5;
-  const WIDTH = 5;
-  const HEIGHT = 5;
+  const WIDTH = 25;
+  const HEIGHT = 25;
+  const MINES = WIDTH * HEIGHT * 0.1;
 
   let mines: [row: number, col: number][] = [];
   let endGame = false;
@@ -55,22 +55,33 @@
       revealCell(row + 1, col + 1);
     }
   };
+
+  const flags: boolean[] = Array(HEIGHT * WIDTH).fill(false);
 </script>
 
 <main class:endGame>
   {#each boardReveals as boardRow, row (row)}
     <div class="row">
       {#each boardRow as cellIsRevealed, col (col)}
-        {#if cellIsRevealed}
+        {#if cellIsRevealed || endGame}
           {#if hasMine(row, col)}
             <div class="square revealed">*</div>
           {:else}
-            <div class="square revealed">{getCellNumber(row, col)}</div>
+            <div class="square revealed">{getCellNumber(row, col) || ""}</div>
           {/if}
         {:else}
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div class="square" on:click={() => revealCell(row, col)} />
+          {@const isFlagged = flags[row * WIDTH + col]}
+          <div
+            class="square"
+            on:click={(e) => {
+              if (e.shiftKey) flags[row * WIDTH + col] = !isFlagged;
+              else if (!isFlagged) revealCell(row, col);
+            }}
+          >
+            {#if isFlagged}?{/if}
+          </div>
         {/if}
       {/each}
     </div>
@@ -86,14 +97,17 @@
   .row {
     display: flex;
     flex-direction: row;
+    user-select: none;
   }
   .square {
+    --size: 20px;
+
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    height: 50px;
-    width: 50px;
+    height: var(--size);
+    width: var(--size);
     background-color: rgba(0, 0, 0, 0.25);
     border: 4px solid black;
     border-color: rgba(255, 255, 255, 0.5) rgba(0, 0, 0, 0.5) rgba(0, 0, 0, 0.5)
